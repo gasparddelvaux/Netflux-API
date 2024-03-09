@@ -16,5 +16,10 @@ class Movie extends Model
         'director',
         'synopsis',
         'cover'
-    ];	
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

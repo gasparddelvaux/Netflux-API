@@ -4,35 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\Movie;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class MovieController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Renvoie la liste des films
      */
     public function index()
     {
-        $movies = Movie::all();
+        $movies = Movie::all()->where('user_id', auth()->user()->id);
         return response()->json($movies, 200);
     }
 
     /**
-     * Display the specified resource.
+     * Renvoie un film spécifique
      */
     public function show(string $id)
     {
-        $movie = Movie::find($id);
+        $movie = Movie::where('user_id', auth()->user()->id)->where('id', $id)->first();
         if(!$movie) {
             return response()->json([
-                'message' => 'Movie not found',
-                'code' => 'movie_not_found'
+                'message' => 'Film non trouvé',
+                'type' => 'error'
             ], 404);
         }
         return response()->json($movie, 200);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Crée un nouveau film
      */
     public function store(Request $request)
     {
@@ -44,7 +45,7 @@ class MovieController extends Controller
             'cover' => 'required|string|max:191',
         ]);
 
-        $movie = Movie::create($validatedData);
+        $movie = Movie::create($validatedData, ['user_id' => auth()->user()->id]);
         return response()->json([
             'message' => 'Film créé',
             'type' => 'success'
@@ -52,7 +53,7 @@ class MovieController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     * Met à jour un film spécifique
      */
     public function update(Request $request, string $id)
     {
@@ -64,7 +65,7 @@ class MovieController extends Controller
             'cover' => 'required|string|max:191',
         ]);
 
-        $movie = Movie::find($id);
+        $movie = Movie::where('user_id', auth()->user()->id)->where('id', $id)->first();
 
         if(!$movie) {
             return response()->json([
@@ -82,11 +83,11 @@ class MovieController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Supprime un film spécifique
      */
     public function destroy(string $id)
     {
-        $movie = Movie::find($id);
+        $movie = Movie::where('user_id', auth()->user()->id)->where('id', $id)->first();
 
         if(!$movie) {
             return response()->json([

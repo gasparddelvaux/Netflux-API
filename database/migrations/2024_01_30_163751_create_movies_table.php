@@ -18,8 +18,12 @@ return new class extends Migration
             $table->string('director');
             $table->text('synopsis');
             $table->string('cover');
-            $table->timestamps(); // ajoutera created_at et updated_at
-            $table->softDeletes(); // ajoutera deleted_at
+            $table->timestamps();
+            $table->softDeletes();
+
+            // Ajout de la colonne user_id pour une liste de film "privéeé"
+            $table->unsignedBigInteger('user_id');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
