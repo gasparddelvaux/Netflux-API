@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 Route::resource('movies', MovieController::class)->middleware('auth:sanctum');
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-Route::post('verifyToken', [AuthController::class, 'verifyToken']);
+Route::post('verifyToken', [AuthController::class, 'verifyToken'])->middleware('auth:sanctum');
 
 // Routes publiques
 Route::post('register', [AuthController::class, 'register']);

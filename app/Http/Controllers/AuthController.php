@@ -30,18 +30,18 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->first();
 
         // Check mot de passe
-        if(!$user || !Hash::check($request->password, $user->password)){
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'message' => 'E-mail ou mot de passe incorrect. Veuillez réessayer.',
                 'type' => 'error'
-            ],401);
+            ], 401);
         }
 
         // Supprimer ses anciens tokens si existants
         $user->tokens()->delete();
 
         // Créer le token
-        $token = $user->createToken($user->email.'-apitoken', ['*'], now()->addHours(12))->plainTextToken;
+        $token = $user->createToken($user->email . '-apitoken', ['*'], now()->addHours(12))->plainTextToken;
 
         // Envoyer la réponse
         return response()->json([
@@ -93,16 +93,9 @@ class AuthController extends Controller
 
     public function verifyToken(Request $request)
     {
-        if($request->user()){
-            return response()->json([
-                'message' => 'Token valide',
-                'type' => 'success'
-            ]);
-        } else {
-            return response()->json([
-                'message' => 'Token invalide',
-                'type' => 'error'
-            ], 401);
-        }
+        return response()->json([
+            'message' => 'Token valide',
+            'type' => 'success'
+        ]);
     }
 }
