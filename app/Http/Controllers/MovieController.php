@@ -9,11 +9,32 @@ use Illuminate\Support\Facades\Http;
 class MovieController extends Controller
 {
     /**
-     * Renvoie la liste des films
+     * Renvoie la liste des films avec pagination et recherche
      */
-    public function index()
+    public function index(Request $request)
     {
-        $movies = Movie::all()->where('user_id', auth()->user()->id);
+        $currentPage = $request->get('currentPage', 1);
+        $itemsPerPage = $request->get('itemsPerPage', 10);
+        $searchQuery = $request->get('searchQuery', '');
+
+        $movies = [];
+
+        if($searchQuery) {
+            $movies = Movie::where('user_id', auth()->user()->id)
+                        ->with('director')
+                        ->where('name', 'like', "%$searchQuery%")
+                        ->orWhere('director', 'like', "%$searchQuery%")
+                        ->orWhere('year', 'like', "%$searchQuery%")
+                        ->orWhere('synopsis', 'like', "%$searchQuery%")
+                        ->paginate($itemsPerPage, ['*'], 'page', $currentPage);
+            return response()->json($movies, 200);
+        } else {
+            $movies = Movie::where('user_id', auth()->user()->id)
+                        ->with('director')
+                        ->paginate($itemsPerPage, ['*'], 'page', $currentPage);
+            return response()->json($movies, 200);
+        }
+
         return response()->json($movies, 200);
     }
 
@@ -23,7 +44,7 @@ class MovieController extends Controller
     public function show(string $id)
     {
         $movie = Movie::where('user_id', auth()->user()->id)->where('id', $id)->first();
-        if(!$movie) {
+        if (!$movie) {
             return response()->json([
                 'message' => 'Film non trouvé',
                 'type' => 'error'
@@ -40,13 +61,17 @@ class MovieController extends Controller
         $validatedData = $request->validate([
             'name' => 'required|string|max:191',
             'year' => 'required|integer',
-            'director' => 'required|string|max:191',
+            'director_id' => 'required|integer',
             'synopsis' => 'required|string',
             'cover' => 'required|string|max:191',
         ]);
 
-        $movie = Movie::create($validatedData, ['user_id' => auth()->user()->id]);
+        $validatedData['user_id'] = auth()->user()->id;
+
+        $movie = Movie::create($validatedData);
+
         return response()->json([
+            'movie' => $movie,
             'message' => 'Film créé',
             'type' => 'success'
         ], 201);
@@ -60,14 +85,14 @@ class MovieController extends Controller
         $validatedData = $request->validate([
             'name' => 'required|string|max:191',
             'year' => 'required|integer',
-            'director' => 'required|string|max:191',
+            'director_id' => 'required|integer',
             'synopsis' => 'required|string',
             'cover' => 'required|string|max:191',
         ]);
 
         $movie = Movie::where('user_id', auth()->user()->id)->where('id', $id)->first();
 
-        if(!$movie) {
+        if (!$movie) {
             return response()->json([
                 'message' => 'Film non trouvé',
                 'type' => 'error'
@@ -89,7 +114,7 @@ class MovieController extends Controller
     {
         $movie = Movie::where('user_id', auth()->user()->id)->where('id', $id)->first();
 
-        if(!$movie) {
+        if (!$movie) {
             return response()->json([
                 'message' => 'Film non trouvé',
                 'type' => 'error'

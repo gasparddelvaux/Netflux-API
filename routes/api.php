@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DirectorController;
 use App\Http\Controllers\MovieController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -15,12 +17,32 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "api" middleware group. Make something great!
 |
 */
-// Routes protégées par Sanctum
-Route::resource('movies', MovieController::class)->middleware('auth:sanctum');
-Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+/**
+* Routes protégées par Sanctum
+*/
 
+// Films
+Route::resource('movies', MovieController::class)->middleware('auth:sanctum');
+
+// Réalisateurs
+Route::resource('directors', DirectorController::class)->middleware('auth:sanctum');
+Route::get('directors-list', [DirectorController::class, 'list'])->middleware('auth:sanctum');
+
+// Auth
+Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('verifyToken', [AuthController::class, 'verifyToken'])->middleware('auth:sanctum');
 
-// Routes publiques
+// Utilisateurs
+Route::get('user-info', [UserController::class, 'info'])->middleware('auth:sanctum');
+
+// Admin
+Route::group(['prefix' => 'admin', 'middleware' => ['auth:sanctum', 'checkrole']], function () {
+    Route::get('users', [UserController::class, 'index']);
+});
+
+/**
+* Routes publiques
+*/
+
 Route::post('register', [AuthController::class, 'register']);
 Route::post('login', [AuthController::class, 'login']);

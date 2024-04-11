@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->year('year');
-            $table->string('director');
             $table->text('synopsis');
             $table->string('cover');
             $table->timestamps();
@@ -24,6 +23,10 @@ return new class extends Migration
             // Ajout de la colonne user_id pour une liste de film "privéeé"
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+
+            // Ajout de la colonne director_id pour lier un film à un réalisateur
+            $table->unsignedBigInteger('director_id');
+            $table->foreign('director_id')->references('id')->on('directors')->onDelete('cascade');
         });
     }
 
