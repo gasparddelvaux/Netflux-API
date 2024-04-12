@@ -38,6 +38,31 @@ class MovieController extends Controller
         return response()->json($movies, 200);
     }
 
+        /**
+     * Renvoie la liste des films pour les admins avec pagination et recherche
+     */
+    public function indexAdmin(Request $request)
+    {
+        $currentPage = $request->get('currentPage', 1);
+        $itemsPerPage = $request->get('itemsPerPage', 10);
+        $searchQuery = $request->get('searchQuery', '');
+        $userId = $request->get('userId', null);
+
+        $movies = Movie::when($userId, function ($query, $userId) {
+            return $query->where('user_id', $userId);
+        })
+        ->with('director', 'user')
+        ->when($searchQuery, function ($query, $searchQuery) {
+            return $query->where('name', 'like', "%$searchQuery%")
+                         ->orWhere('director', 'like', "%$searchQuery%")
+                         ->orWhere('year', 'like', "%$searchQuery%")
+                         ->orWhere('synopsis', 'like', "%$searchQuery%");
+        })
+        ->paginate($itemsPerPage, ['*'], 'page', $currentPage);
+
+        return response()->json($movies, 200);
+    }
+
     /**
      * Renvoie un film spécifique
      */

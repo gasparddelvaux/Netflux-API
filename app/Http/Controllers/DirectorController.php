@@ -48,6 +48,7 @@ class DirectorController extends Controller
 
         if ($existingDirector) {
             return response()->json([
+                'director' => $existingDirector,
                 'message' => 'Un réalisateur avec ce nom et prénom existe déjà...',
                 'type' => 'error'
             ], 400);
@@ -56,7 +57,8 @@ class DirectorController extends Controller
         $director = Director::create($validatedData);
 
         return response()->json([
-            'message' => 'Film créé',
+            'director' => $director,
+            'message' => 'Réalisateur créé',
             'type' => 'success'
         ], 201);
     }
@@ -89,9 +91,16 @@ class DirectorController extends Controller
         $director = Director::where('id', $id)->first();
         if (!$director) {
             return response()->json([
-                'message' => 'Réalisateur non trouvé',
+                'message' => 'Réalisateur non trouvé.',
                 'type' => 'error'
             ], 404);
+        }
+
+        if($director->movies->count() > 0) {
+            return response()->json([
+                'message' => 'Impossible de supprimer un réalisateur ayant des films associés.',
+                'type' => 'error'
+            ], 403);
         }
 
         $director->delete();

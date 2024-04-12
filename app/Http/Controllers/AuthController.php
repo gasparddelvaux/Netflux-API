@@ -37,6 +37,13 @@ class AuthController extends Controller
             ], 401);
         }
 
+        if($user->banned) {
+            return response()->json([
+                'message' => 'Votre compte a été banni. Veuillez contacter un administrateur.',
+                'type' => 'error'
+            ], 403);
+        }
+
         // Supprimer ses anciens tokens si existants
         $user->tokens()->delete();
 

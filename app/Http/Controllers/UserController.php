@@ -36,4 +36,43 @@ class UserController extends Controller
 
         return response()->json($users, 200);
     }
+
+    // Fonction d'update qui permet le banissement d'un utilisateur
+    public function update(Request $request, $id)
+    {
+        $validatedData = $request->validate([
+            'banned' => 'required|boolean',
+            'role' => 'required|string'
+        ]);
+
+        if($validatedData['banned'] === true && $validatedData['role'] === 'admin') {
+            return response()->json([
+                'message' => 'Vous ne pouvez pas bannir un administrateur',
+                'type' => 'error'
+            ], 403);
+        }
+
+        $user = User::find($id);
+
+        if($user['role'] != $validatedData['role']  && $request->user()->role !== 'superadmin') {
+            return response()->json([
+                'message' => 'Vous n\'avez pas les droits pour changer le rôle d\'un utilisateur',
+                'type' => 'error'
+            ], 403);
+        }
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non trouvé',
+                'type' => 'error'
+            ], 404);
+        }
+
+        $user->update($validatedData);
+
+        return response()->json([
+            'message' => 'Utilisateur mis à jour',
+            'type' => 'success'
+        ], 200);
+    }
 }

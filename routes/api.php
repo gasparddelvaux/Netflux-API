@@ -38,6 +38,8 @@ Route::get('user-info', [UserController::class, 'info'])->middleware('auth:sanct
 // Admin
 Route::group(['prefix' => 'admin', 'middleware' => ['auth:sanctum', 'checkrole']], function () {
     Route::get('users', [UserController::class, 'index']);
+    Route::put('users/{id}', [UserController::class, 'update']);
+    Route::get('movies', [MovieController::class, 'indexAdmin']);
 });
 
 /**
