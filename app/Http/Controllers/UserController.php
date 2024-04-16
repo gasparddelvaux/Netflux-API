@@ -75,4 +75,18 @@ class UserController extends Controller
             'type' => 'success'
         ], 200);
     }
+
+    public function userInfo($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Utilisateur non trouvé',
+                'type' => 'error'
+            ], 404);
+        }
+
+        return response()->json($user, 200);
+    }
 }

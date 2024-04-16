@@ -17,30 +17,28 @@ class MovieController extends Controller
         $itemsPerPage = $request->get('itemsPerPage', 10);
         $searchQuery = $request->get('searchQuery', '');
 
-        $movies = [];
-
-        if($searchQuery) {
-            $movies = Movie::where('user_id', auth()->user()->id)
-                        ->with('director')
-                        ->where('name', 'like', "%$searchQuery%")
-                        ->orWhere('director', 'like', "%$searchQuery%")
-                        ->orWhere('year', 'like', "%$searchQuery%")
-                        ->orWhere('synopsis', 'like', "%$searchQuery%")
-                        ->paginate($itemsPerPage, ['*'], 'page', $currentPage);
-            return response()->json($movies, 200);
-        } else {
-            $movies = Movie::where('user_id', auth()->user()->id)
-                        ->with('director')
-                        ->paginate($itemsPerPage, ['*'], 'page', $currentPage);
-            return response()->json($movies, 200);
-        }
+        $movies = Movie::where('user_id', auth()->user()->id)
+            ->with('director')
+            ->when($searchQuery, function ($query, $searchQuery) {
+                return $query->where(function ($query) use ($searchQuery) {
+                    $query->where('name', 'like', "%$searchQuery%")
+                          ->orWhere('year', 'like', "%$searchQuery%")
+                          ->orWhere('synopsis', 'like', "%$searchQuery%");
+                })
+                ->orWhereHas('director', function ($query) use ($searchQuery) {
+                    $query->where('firstname', 'like', "%$searchQuery%")
+                          ->orWhere('lastname', 'like', "%$searchQuery%");
+                });
+            })
+            ->paginate($itemsPerPage, ['*'], 'page', $currentPage);
 
         return response()->json($movies, 200);
     }
 
-        /**
+    /**
      * Renvoie la liste des films pour les admins avec pagination et recherche
      */
+
     public function indexAdmin(Request $request)
     {
         $currentPage = $request->get('currentPage', 1);
@@ -51,14 +49,19 @@ class MovieController extends Controller
         $movies = Movie::when($userId, function ($query, $userId) {
             return $query->where('user_id', $userId);
         })
-        ->with('director', 'user')
-        ->when($searchQuery, function ($query, $searchQuery) {
-            return $query->where('name', 'like', "%$searchQuery%")
-                         ->orWhere('director', 'like', "%$searchQuery%")
-                         ->orWhere('year', 'like', "%$searchQuery%")
-                         ->orWhere('synopsis', 'like', "%$searchQuery%");
-        })
-        ->paginate($itemsPerPage, ['*'], 'page', $currentPage);
+            ->with('director', 'user')
+            ->when($searchQuery, function ($query, $searchQuery) {
+                return $query->where(function ($query) use ($searchQuery) {
+                    $query->where('name', 'like', "%$searchQuery%")
+                        ->orWhere('year', 'like', "%$searchQuery%")
+                        ->orWhere('synopsis', 'like', "%$searchQuery%");
+                })
+                    ->orWhereHas('director', function ($query) use ($searchQuery) {
+                        $query->where('firstname', 'like', "%$searchQuery%")
+                            ->orWhere('lastname', 'like', "%$searchQuery%");
+                    });
+            })
+            ->paginate($itemsPerPage, ['*'], 'page', $currentPage);
 
         return response()->json($movies, 200);
     }
